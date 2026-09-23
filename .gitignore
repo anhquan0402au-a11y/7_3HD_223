@@ -14,3 +14,4 @@ trivy-*-report.txt
 .vs/
 .idea/
 .DS_Store
+jenkins_home_backup.tar.gz

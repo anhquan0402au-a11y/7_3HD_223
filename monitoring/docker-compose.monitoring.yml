@@ -8,6 +8,8 @@ services:
     volumes:
       - ${MON_DIR:-.}/prometheus.yml:/etc/prometheus/prometheus.yml
       - ${MON_DIR:-.}/alert.rules.yml:/etc/prometheus/alert.rules.yml
+      - ${MON_DIR:-.}/grafana/provisioning:/etc/grafana/provisioning
+      - ${MON_DIR:-.}/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - devops-net
     restart: unless-stopped
