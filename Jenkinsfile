@@ -53,7 +53,7 @@ pipeline {
         //STAGE 3: CODE QUALITY (SonarCloud)
         stage('Code Quality') {
             steps {
-                withCredentials([string(credentialsId: 'sonarcloud-token', variable: 'SONAR_TOKEN')]) {
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
                     sh '''
                         export PATH="$PATH:/root/.dotnet/tools"
                         dotnet tool install --global dotnet-sonarscanner || true
