@@ -6,8 +6,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
+      - ${MON_DIR:-.}/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${MON_DIR:-.}/alert.rules.yml:/etc/prometheus/alert.rules.yml
     networks:
       - devops-net
     restart: unless-stopped
@@ -21,8 +21,8 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ${MON_DIR:-.}/grafana/provisioning:/etc/grafana/provisioning
+      - ${MON_DIR:-.}/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - devops-net
     restart: unless-stopped

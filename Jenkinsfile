@@ -121,12 +121,20 @@ pipeline {
         }
 
         //STAGE 7: MONITORING
+
         stage('Monitoring') {
+            environment {
+                // Host-side path of the Jenkins workspace, as the Docker daemon sees it.
+                HOST_WORKSPACE = "/var/lib/docker/volumes/jenkins_home/_data/workspace/${env.JOB_NAME}"
+            }
             steps {
                 sh '''
                     docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || docker network create ${DOCKER_NETWORK}
-                    docker compose -f monitoring/docker-compose.monitoring.yml up -d
-                    sleep 6
+
+                    MON_DIR="${HOST_WORKSPACE}/monitoring" \
+                      docker compose -f monitoring/docker-compose.monitoring.yml up -d
+
+                    sleep 8
                     curl -f http://host.docker.internal:9090/-/healthy
                     curl -f http://host.docker.internal:3000/api/health
                 '''
