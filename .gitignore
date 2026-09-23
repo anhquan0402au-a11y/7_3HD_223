@@ -1,0 +1,16 @@
+# .NET build output
+**/bin/
+**/obj/
+
+# Test + coverage artefacts
+**/TestResults/
+*.trx
+coverage*.xml
+
+# Pipeline-generated reports
+trivy-*-report.txt
+
+# IDE / OS
+.vs/
+.idea/
+.DS_Store

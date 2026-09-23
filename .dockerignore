@@ -1,0 +1,13 @@
+# Keep the app image build context small and clean
+**/bin
+**/obj
+**/TestResults
+.git
+.gitignore
+tests
+deploy
+infra
+monitoring
+docs
+*.md
+Jenkinsfile
