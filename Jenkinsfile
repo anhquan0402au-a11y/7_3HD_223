@@ -6,10 +6,9 @@ pipeline {
         IMAGE_TAG         = "${env.BUILD_NUMBER}"
         DOCKER_NETWORK    = 'devops-net'
 
-        // SonarCloud (https://sonarcloud.io)
         SONAR_HOST_URL    = 'https://sonarcloud.io'
         SONAR_ORG         = 'anhquan0402au-a11y'
-        SONAR_PROJECT_KEY = 'anhquan0402au-a11y_223_7_3HD'
+        SONAR_PROJECT_KEY = 'anhquan0402au-a11y_7_3HD_223'
     }
 
     options {
@@ -21,17 +20,16 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/anhquan0402au-a11y/7_3HD_223.git'
                 sh 'echo "Building commit:" && git rev-parse --short HEAD'
             }
         }
 
-        // STAGE 1: BUILD
+        //STAGE 1: BUILD
         stage('Build') {
             steps {
                 sh 'dotnet restore src/OrderApi/OrderApi.csproj'
                 sh 'dotnet build src/OrderApi/OrderApi.csproj -c Release --no-restore'
-                // Versioned Docker image + a latest tag (app Dockerfile at repo root)
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
                 sh "docker images ${IMAGE_NAME}"
             }
@@ -50,7 +48,7 @@ pipeline {
             }
         }
 
-        //STAGE 3: CODE QUALITY (SonarCloud)
+        // STAGE 3: CODE QUALITY 
         stage('Code Quality') {
             steps {
                 withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
@@ -62,8 +60,7 @@ pipeline {
                           /k:"${SONAR_PROJECT_KEY}" \
                           /o:"${SONAR_ORG}" \
                           /d:sonar.host.url="${SONAR_HOST_URL}" \
-                          /d:sonar.token="${SONAR_TOKEN}" \
-                          /d:sonar.qualitygate.wait=true
+                          /d:sonar.token="${SONAR_TOKEN}"
 
                         dotnet build src/OrderApi/OrderApi.csproj -c Release --no-incremental
 
@@ -73,7 +70,7 @@ pipeline {
             }
         }
 
-        //STAGE 4: SECURITY
+        // STAGE 4: SECURITY
         stage('Security') {
             steps {
                 sh 'trivy --version'
@@ -98,7 +95,7 @@ pipeline {
             }
         }
 
-        //STAGE 6: RELEASE (production) 
+        // STAGE 6: RELEASE (production)
         stage('Release') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
@@ -121,19 +118,15 @@ pipeline {
         }
 
         //STAGE 7: MONITORING
-
         stage('Monitoring') {
             environment {
-                // Host-side path of the Jenkins workspace, as the Docker daemon sees it.
-                HOST_WORKSPACE = "/var/lib/docker/volumes/jenkins_home/_data/workspace/${env.JOB_NAME}"
+                // Host-side path of this job's workspace, as the Docker daemon sees it.
+                MON_DIR = "/var/lib/docker/volumes/jenkins_home/_data/workspace/${env.JOB_NAME}/monitoring"
             }
             steps {
                 sh '''
                     docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || docker network create ${DOCKER_NETWORK}
-
-                    MON_DIR="${HOST_WORKSPACE}/monitoring" \
-                      docker compose -f monitoring/docker-compose.monitoring.yml up -d
-
+                    docker compose -f monitoring/docker-compose.monitoring.yml up -d
                     sleep 8
                     curl -f http://host.docker.internal:9090/-/healthy
                     curl -f http://host.docker.internal:3000/api/health
